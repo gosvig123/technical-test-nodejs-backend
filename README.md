@@ -56,7 +56,7 @@ In this challenge, you will build a Node.js backend (using TypeScript) that mana
     - We provide you the API key for nebius api studio. The API is fully compatible with OpenAI api. You can use all packages and interfaces like if you were using OpenAI.
     - We provide you access to Llama 3.3 70B Instruct. Here you have the caracteristics of the model: [Model Characteristics](https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct)
     - Example of api call:
-```
+```js
 const OpenAI = require('openai');
 
 const client = new OpenAI({
