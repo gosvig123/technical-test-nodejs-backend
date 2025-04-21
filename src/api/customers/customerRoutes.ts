@@ -1,9 +1,8 @@
-import { Router } from 'express';
 import { getCustomers } from '../../services/customerService.js';
+import { Request, Response, Router } from 'express';
 
 const router = Router();
-
-router.get('/', async (req, res) => {
+router.get('/', async (_req: Request, res: Response) => {
   try {
     const customers = await getCustomers();
     res.json(customers);
