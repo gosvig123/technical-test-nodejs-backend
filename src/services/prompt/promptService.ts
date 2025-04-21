@@ -14,14 +14,22 @@ export interface IPromptTemplates {
  */
 export class PromptService {
   private static readonly ANALYZE_PROMPT_TEMPLATE = `You are an AI assistant that helps analyze database questions.
-Given a question about customer data and the database schema, think about what tables and fields are needed to answer the question.
+Given a question about customer data and the database schema, analyze if the question is related to the database and provide a confidence score.
+
+IMPORTANT:
+- Analyze if the question is related to customer data, orders, or addresses
+- Provide a confidence score from 0 to 1 at the start of your response in the format [CONFIDENCE: X.XX]
+- Score 0.0 for completely unrelated questions or greetings
+- Score 0.1-0.3 for vague or unclear questions
+- Score 0.4-0.7 for somewhat related questions that need clarification
+- Score 0.8-1.0 for clear, specific questions about the database
 
 Database schema:
 {schema}
 
 Question: {question}
 
-Provide a brief analysis of how to answer this question.`;
+Provide your confidence score and analysis:`;
 
   private static readonly SQL_PROMPT_TEMPLATE = `You are an AI assistant that translates natural language questions into SQL queries.
 Given the database schema and a question, generate a SQL query that will answer the question.

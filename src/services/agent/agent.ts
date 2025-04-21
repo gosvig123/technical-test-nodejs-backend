@@ -45,13 +45,9 @@ export interface IAgentCallbacks {
  * @returns The LangChain chains
  */
 const createChains = () => {
-    // Get the database schema dynamically
     const schema = SqlService.getDatabaseSchemaForPrompt();
-
-    // Create prompt templates
     const promptTemplates = PromptService.createPromptTemplates();
 
-    // Create chains using the prompt templates
     const analyzeChain = RunnableSequence.from([
         promptTemplates.analyzePrompt,
         model,
@@ -109,16 +105,28 @@ const executeAgentLogic = async (
         const analysis = await analyzeChain.invoke({ schema, question });
         callbacks?.onThought?.(analysis);
 
-        // Step 2: Generate SQL query
+        // Extract confidence score
+        const confidenceMatch = analysis.match(/\[CONFIDENCE: (0\.\d+)\]/);
+        const confidence = confidenceMatch ? parseFloat(confidenceMatch[1]) : 0;
+
+        // Only proceed if confidence is high enough
+        if (confidence < 0.4) {
+            const response = "I need a specific question about customer data to help you. " +
+                           "Please ask about customers, their orders, or addresses.";
+            
+            callbacks?.onAnswer?.(response);
+            
+            return {
+                answer: response,
+                thoughts: [analysis],
+                error: null
+            };
+        }
+
+        // Only proceed with SQL generation if the question is clear
         callbacks?.onThought?.("Generating SQL query...");
         let sqlQuery = await sqlChain.invoke({ schema, question, analysis });
-        
-        // Add sanitization step
         sqlQuery = sanitizeSqlQuery(sqlQuery);
-        
-        // Log the query for debugging
-        console.log('Generated SQL query:', sqlQuery);
-        
         callbacks?.onSqlQuery?.(sqlQuery);
 
         // Step 3: Execute SQL query
