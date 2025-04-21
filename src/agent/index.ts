@@ -3,7 +3,7 @@ import { SqlDatabase } from "langchain/sql_db";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { DataSource } from "typeorm";
+import prisma from '../db/index.js';
 import dotenv from "dotenv";
 
 // Load environment variables
@@ -12,23 +12,9 @@ dotenv.config();
 // Function to initialize the database and create the chain
 const initializeAgent = async () => {
     try {
-
-        // Create a TypeORM DataSource for SqlDatabase
-        const dataSource = new DataSource({
-            type: "postgres",
-            host: "localhost",
-            port: 5432,
-            username: "test_user",
-            password: "test_pass",
-            database: "test_db"
-        });
-        
-        // Initialize the connection
-        await dataSource.initialize();
-
-        // Use SqlDatabase with TypeORM DataSource
+        // Use SqlDatabase with direct connection details
         const db = await SqlDatabase.fromDataSourceParams({
-            appDataSource: dataSource,
+            appDataSource: prisma,
         });
 
         const model = new ChatOpenAI({ temperature: 0 });
