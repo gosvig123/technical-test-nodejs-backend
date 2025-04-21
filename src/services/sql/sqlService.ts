@@ -4,7 +4,7 @@ import { Prisma } from '../../../generated/prisma/index.js';
 /**
  * Interface for SQL query result
  */
-export interface ISqlQueryResult<T = Record<string, string>> {
+export interface ISqlQueryResult<T> {
   success: boolean;
   data?: T;
   error?: string;
@@ -86,7 +86,7 @@ export class SqlService {
    * @param obj The object to stringify
    * @returns The stringified object
    */
-  public static safeStringify(obj: Record<string, string>): string {
+  public static safeStringify(obj: Record<string, string> | Record<string, string>[]): string {
     return JSON.stringify(obj, (_, value) =>
       typeof value === 'bigint' ? value.toString() : value
     );

@@ -35,7 +35,7 @@ export interface IAgentResponse {
 export interface IAgentCallbacks {
     onThought?: (thought: string) => void;
     onSqlQuery?: (sqlQuery: string) => void;
-    onQueryResult?: (result: Record<string, string>[]) => void; // Refined type for query results
+    onQueryResult?: (result: Record<string, string>[]) => void;
     onAnswer?: (answer: string) => void;
     onComplete?: () => void;
 }
@@ -134,20 +134,20 @@ const executeAgentLogic = async (
 
         try {
             // Use the SqlService to execute the query
-            const queryResult = await SqlService.executeSafeReadQuery(sqlQuery);
+            const queryResult = await SqlService.executeSafeReadQuery<Record<string, string>[]>(sqlQuery);
 
             if (!queryResult.success) {
                 throw new Error(queryResult.error);
             }
 
-            callbacks?.onQueryResult?.(queryResult.data);
+            callbacks?.onQueryResult?.(queryResult.data as Record<string, string>[]);
 
             // Step 4: Generate answer
             callbacks?.onThought?.("Generating answer...");
             const answer = await answerChain.invoke({
                 question,
                 sqlQuery,
-                queryResult: SqlService.safeStringify(queryResult.data)
+                queryResult: SqlService.safeStringify(queryResult.data as Record<string, string>[])
             });
 
             callbacks?.onAnswer?.(answer);
