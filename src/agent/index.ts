@@ -3,18 +3,32 @@ import { SqlDatabase } from "langchain/sql_db";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
+import { DataSource } from "typeorm";
+import dotenv from "dotenv";
 
-import { PrismaClient } from "@prisma/client";
-
-// Initialize Prisma Client
-const prisma = new PrismaClient();
+// Load environment variables
+dotenv.config();
 
 // Function to initialize the database and create the chain
 const initializeAgent = async () => {
     try {
-        // Use SqlDatabase with PrismaClient
+
+        // Create a TypeORM DataSource for SqlDatabase
+        const dataSource = new DataSource({
+            type: "postgres",
+            host: "localhost",
+            port: 5432,
+            username: "test_user",
+            password: "test_pass",
+            database: "test_db"
+        });
+        
+        // Initialize the connection
+        await dataSource.initialize();
+
+        // Use SqlDatabase with TypeORM DataSource
         const db = await SqlDatabase.fromDataSourceParams({
-            appDataSource: prisma, // Pass PrismaClient instance
+            appDataSource: dataSource,
         });
 
         const model = new ChatOpenAI({ temperature: 0 });
@@ -43,9 +57,6 @@ const initializeAgent = async () => {
             prompt,
             model,
             new StringOutputParser(),
-            // Optional: Add a step here to execute the SQL query using db.run()
-            // This would require parsing the SQL query from the model's output
-            // and handling the results. For a basic implementation, we'll return the SQL query.
         ]);
 
         return chain;
@@ -59,11 +70,7 @@ const initializeAgent = async () => {
 const queryAgent = async (query: string) => {
     const chain = await initializeAgent();
     try {
-        // The chain now returns the generated SQL query as a string
         const sqlQuery = await chain.invoke(query);
-        // For a basic implementation, we will return the generated SQL query.
-        // In a full implementation, you would execute this query against the database
-        // and return the results.
         return sqlQuery;
     } catch (error) {
         console.error("Error running agent query:", error);
