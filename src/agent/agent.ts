@@ -48,7 +48,7 @@ const createChains = () => {
     const schema = SqlService.getDatabaseSchemaForPrompt();
 
     // Create prompt templates
-    const promptTemplates = PromptService.createPromptTemplates(schema);
+    const promptTemplates = PromptService.createPromptTemplates();
 
     // Create chains using the prompt templates
     const analyzeChain = RunnableSequence.from([

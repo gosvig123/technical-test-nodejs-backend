@@ -62,7 +62,7 @@ Please explain these results in a clear, natural way:`;
    * @param schema The database schema to use in the prompts
    * @returns The prompt templates
    */
-  public static createPromptTemplates(_schema: string): IPromptTemplates {
+  public static createPromptTemplates(): IPromptTemplates {
     // Use the schema string directly in the prompt templates
     return {
       analyzePrompt: PromptTemplate.fromTemplate(this.ANALYZE_PROMPT_TEMPLATE),
