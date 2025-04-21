@@ -17,91 +17,31 @@ export interface ISqlQueryResult<T = any> {
 export class SqlService {
   /**
    * Validates a SQL query
-   * @param sqlQuery The SQL query to validate
+   * @param query The SQL query to validate
    * @returns Validation result with isValid flag and optional error message
    */
-  public static validateSqlQuery(sqlQuery: string): { isValid: boolean; error?: string } {
-    if (!sqlQuery || sqlQuery.trim() === '') {
-      return { isValid: false, error: 'SQL query is empty' };
+  public static validateSqlQuery(query: string): { isValid: boolean; error?: string } {
+    // Basic validation checks
+    if (!query) {
+      return { isValid: false, error: 'Query is empty' };
     }
 
-    // Check if the query starts with SELECT
-    if (!sqlQuery.trim().toUpperCase().startsWith('SELECT')) {
+    // Ensure it's a SELECT query
+    if (!query.trim().toLowerCase().startsWith('select')) {
       return { isValid: false, error: 'Only SELECT queries are allowed' };
     }
 
-    // Check for multiple queries (semicolons not at the end)
-    const trimmedQuery = sqlQuery.trim();
-    const semicolonIndex = trimmedQuery.indexOf(';');
-    if (semicolonIndex !== -1 && semicolonIndex !== trimmedQuery.length - 1) {
-      return { isValid: false, error: 'Multiple queries are not allowed' };
-    }
-
-    // Check for balanced quotes
-    const singleQuoteCount = (sqlQuery.match(/'/g) || []).length;
-    if (singleQuoteCount % 2 !== 0) {
-      return { isValid: false, error: 'Unbalanced single quotes in query' };
-    }
-
-    const doubleQuoteCount = (sqlQuery.match(/"/g) || []).length;
-    if (doubleQuoteCount % 2 !== 0) {
-      return { isValid: false, error: 'Unbalanced double quotes in query' };
+    // Check for dangerous keywords
+    const dangerousKeywords = ['insert', 'update', 'delete', 'drop', 'truncate', 'alter'];
+    const hasDisallowedKeywords = dangerousKeywords.some(keyword => 
+      query.toLowerCase().includes(keyword)
+    );
+    
+    if (hasDisallowedKeywords) {
+      return { isValid: false, error: 'Query contains disallowed keywords' };
     }
 
     return { isValid: true };
-  }
-
-  /**
-   * Cleans up a SQL query by removing markdown formatting and fixing common syntax issues
-   * @param sqlQuery The SQL query to clean up
-   * @returns The cleaned SQL query
-   */
-  public static cleanupSqlQuery(sqlQuery: string): string {
-    if (!sqlQuery) return '';
-
-    let cleaned = sqlQuery;
-
-    // Remove markdown code block syntax and formatting
-    cleaned = cleaned.replace(/```sql\s*/gi, '');
-    cleaned = cleaned.replace(/```\s*$/g, '');
-    cleaned = cleaned.replace(/```/g, '');
-    cleaned = cleaned.replace(/^sql\s+/i, '');
-    cleaned = cleaned.replace(/^`+|`+$/g, '');
-    cleaned = cleaned.replace(/^['"]|['"]+$/g, '');
-
-    // Fix common SQL syntax issues
-    cleaned = cleaned.replace(/WHERE\s+([\w.]+)\s*=\s*'([\w\s]+)(?!')(?=\s+(?:AND|OR|GROUP|ORDER|HAVING|LIMIT|$))/gi, "WHERE $1 = '$2'");
-    cleaned = cleaned.replace(/WHERE\s+([\w.]+)\s*LIKE\s*'([\w\s%]+)(?!')(?=\s+(?:AND|OR|GROUP|ORDER|HAVING|LIMIT|$))/gi, "WHERE $1 LIKE '$2'");
-    cleaned = cleaned.replace(/=\s*'([^']+)(?!')/g, "= '$1'");
-    cleaned = cleaned.replace(/LIKE\s*'([^']+)(?!')/g, "LIKE '$1'");
-    cleaned = cleaned.replace(/JOIN\s+([\w.]+)\s+ON\s+([\w.]+)\s*=\s*'([\w\s]+)(?!')(?=\s+(?:AND|OR|WHERE|JOIN|GROUP|ORDER|HAVING|LIMIT|$))/gi, "JOIN $1 ON $2 = '$3'");
-
-    // Ensure quotes are properly paired
-    let singleQuoteCount = (cleaned.match(/'/g) || []).length;
-    if (singleQuoteCount % 2 !== 0) {
-      cleaned = cleaned.replace(/WHERE\s+([\w.]+)\s*=\s*'([^']+)$/i, "WHERE $1 = '$2'");
-      cleaned = cleaned.replace(/LIKE\s*'([^']+)$/i, "LIKE '$1'");
-      
-      singleQuoteCount = (cleaned.match(/'/g) || []).length;
-      if (singleQuoteCount % 2 !== 0) {
-        cleaned += "'";
-      }
-    }
-
-    let doubleQuoteCount = (cleaned.match(/"/g) || []).length;
-    if (doubleQuoteCount % 2 !== 0) {
-      cleaned = cleaned.replace(/WHERE\s+([\w.]+)\s*=\s*"([^"]+)$/i, 'WHERE $1 = "$2"');
-      
-      doubleQuoteCount = (cleaned.match(/"/g) || []).length;
-      if (doubleQuoteCount % 2 !== 0) {
-        cleaned += '"';
-      }
-    }
-
-    // Normalize whitespace
-    cleaned = cleaned.replace(/\s+/g, ' ').trim();
-
-    return cleaned;
   }
 
   /**
@@ -111,7 +51,7 @@ export class SqlService {
    */
   public static async executeSafeReadQuery<T = any>(sqlQuery: string): Promise<ISqlQueryResult<T>> {
     try {
-      // Validate the query
+      // Add validation check
       const validation = this.validateSqlQuery(sqlQuery);
       if (!validation.isValid) {
         return {
@@ -160,7 +100,7 @@ export class SqlService {
 public static getDatabaseSchemaForPrompt(): string {
   // Get model names from Prisma's metadata
   const modelNames = Object.keys(Prisma.ModelName).map(key =>
-    (Prisma.ModelName as any)[key] as string
+    (Prisma.ModelName as Record<string, string>)[key]
   );
 
   let schema = '';

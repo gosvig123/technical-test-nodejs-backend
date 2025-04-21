@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import { streamingLangChainAgent } from '../agent/agent.js';
+import { streamingLangChainAgent } from '../services/agent/agent.js';
 import { SqlService } from '../services/sql/sqlService.js';
 
 /**

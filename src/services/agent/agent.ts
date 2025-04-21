@@ -2,8 +2,8 @@ import dotenv from 'dotenv';
 import { ChatOpenAI } from '@langchain/openai';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { RunnableSequence } from '@langchain/core/runnables';
-import { SqlService } from '../services/sql/sqlService.js';
-import { PromptService } from '../services/prompt/promptService.js';
+import { SqlService } from '../sql/sqlService.js';
+import { PromptService } from '../prompt/promptService.js';
 
 // Load environment variables
 dotenv.config();
@@ -72,6 +72,23 @@ const createChains = () => {
     return { analyzeChain, sqlChain, answerChain, schema };
 };
 
+// Add this helper function at the top level
+const sanitizeSqlQuery = (query: string): string => {
+    // Remove any extra quotes that might cause syntax errors
+    let sanitized = query.trim();
+    
+    // Remove any trailing semicolons
+    sanitized = sanitized.replace(/;+$/, '');
+    
+    // Ensure quotes are properly balanced
+    const singleQuotes = (sanitized.match(/'/g) || []).length;
+    if (singleQuotes % 2 !== 0) {
+        sanitized = sanitized.replace(/'([^']*)$/, "$1");
+    }
+    
+    return sanitized;
+};
+
 /**
  * Core agent logic function that both streaming and non-streaming versions use
  * @param question The natural language question
@@ -94,7 +111,13 @@ const executeAgentLogic = async (
         // Step 2: Generate SQL query
         callbacks?.onThought?.("Generating SQL query...");
         let sqlQuery = await sqlChain.invoke({ schema, question, analysis });
-        sqlQuery = SqlService.cleanupSqlQuery(sqlQuery);
+        
+        // Add sanitization step
+        sqlQuery = sanitizeSqlQuery(sqlQuery);
+        
+        // Log the query for debugging
+        console.log('Generated SQL query:', sqlQuery);
+        
         callbacks?.onSqlQuery?.(sqlQuery);
 
         // Step 3: Execute SQL query
@@ -151,15 +174,6 @@ const executeAgentLogic = async (
 };
 
 /**
- * Run the LLM-powered agent to answer a natural language question using LangChain
- * @param question The natural language question
- * @returns The agent's response including answer, SQL query, query result, and thoughts
- */
-const runLangChainAgent = async (question: string): Promise<IAgentResponse> => {
-    return executeAgentLogic(question);
-};
-
-/**
  * Run the LLM-powered agent with streaming response
  * @param question The natural language question
  * @param onThought Callback for thoughts/reasoning
@@ -190,6 +204,5 @@ const streamingLangChainAgent = async (
 
 // Export functions
 export {
-    runLangChainAgent,
     streamingLangChainAgent
 };
