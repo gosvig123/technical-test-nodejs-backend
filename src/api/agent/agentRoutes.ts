@@ -1,8 +1,20 @@
 import { Router, Request, Response } from 'express';
-import { naturalLanguageToSqlQuery } from '../../agent/index.js'; // Import the queryAgent function
+import { runLangChainAgent } from '../../agent/agent.js';
+
+
 
 const router = Router();
 
+
+
+/**
+ * Route for querying the database using the LLM-powered agent
+ * This uses a multi-step reasoning process:
+ * 1. Analyze the question
+ * 2. Generate SQL query
+ * 3. Execute SQL query
+ * 4. Generate natural language answer
+ */
 router.post('/query', async (req: Request, res: Response) => {
     const { query } = req.body;
 
@@ -10,19 +22,19 @@ router.post('/query', async (req: Request, res: Response) => {
         return res.status(400).json({ error: 'Query is required in the request body.' });
     }
 
-    try {
-        const result = await naturalLanguageToSqlQuery(query);
-        if (!result || !result.result || (Array.isArray(result.result) && result.result.length === 0)) {
-            res.status(404).json({ message: 'No data found for your query.' });
-        } else {
-            res.json({
-                result: result.result
-            });
-        }
-    } catch (error) {
-        console.error('Error processing agent query:', error);
-        res.status(500).json({ error: 'An error occurred while processing your query.' });
+    // Run the agent and return the result
+    const result = await runLangChainAgent(query);
+
+    if (result.error) {
+        return res.status(500).json({ error: result.error });
     }
+
+    // Convert any BigInt values to strings before sending the response
+    const safeResult = {
+        answer: result.answer,
+    };
+
+    res.json(safeResult);
 });
 
 export default router;
