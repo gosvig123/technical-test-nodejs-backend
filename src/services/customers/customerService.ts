@@ -1,5 +1,5 @@
-import { customer } from '../../generated/prisma/index.js';
-import prisma from '../db/index.js';
+import { customer } from '../../../generated/prisma/index.js';
+import prisma from '../../db/index.js';
 
 export const getCustomers = async (): Promise<customer[]> => {
   try {

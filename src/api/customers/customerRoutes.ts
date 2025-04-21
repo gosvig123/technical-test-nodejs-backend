@@ -1,4 +1,4 @@
-import { getCustomers, getCustomerById, createCustomer, updateCustomer, deleteCustomer } from '../../services/customerService.js';
+import { getCustomers, getCustomerById, createCustomer, updateCustomer, deleteCustomer } from '../../services/customers/customerService.js';
 import { Router, Request, Response, NextFunction } from 'express';
 import authenticateApiKey from '../../middleware/auth.js';
 
