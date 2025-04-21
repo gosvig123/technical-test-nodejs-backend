@@ -185,6 +185,7 @@
                 queries.scrollTop = queries.scrollHeight;
             }
 
+            // Move socket event listeners outside the click handler
             socket.on('connect', () => {
                 status.textContent = 'Connected to server';
                 clearError();
@@ -199,6 +200,27 @@
                 submitBtn.disabled = false;
             });
 
+            socket.on('thought', (data) => {
+                addThought(data.thought);
+            });
+
+            socket.on('sqlQuery', (data) => {
+                addQuery(`Query: ${data.sqlQuery}`);
+            });
+
+            socket.on('queryResult', (data) => {
+                addQuery(`Result: ${JSON.stringify(data.result, null, 2)}`);
+            });
+
+            socket.on('answerChunk', (data) => {
+                answer.textContent += data.chunk;
+            });
+
+            socket.on('answerComplete', () => {
+                status.textContent = 'Query completed';
+                submitBtn.disabled = false;
+            });
+
             submitBtn.addEventListener('click', () => {
                 const question = questionInput.value.trim();
                 if (!question) {
@@ -210,27 +232,6 @@
                 clearOutputs();
                 submitBtn.disabled = true;
                 status.textContent = 'Processing question...';
-
-                socket.on('thought', (data) => {
-                    addThought(data.thought);
-                });
-
-                socket.on('sqlQuery', (data) => {
-                    addQuery(`Query: ${data.sqlQuery}`);
-                });
-
-                socket.on('queryResult', (data) => {
-                    addQuery(`Result: ${JSON.stringify(data.result, null, 2)}`);
-                });
-
-                socket.on('answerChunk', (data) => {
-                    answer.textContent += data.chunk;
-                });
-
-                socket.on('answerComplete', () => {
-                    status.textContent = 'Query completed';
-                    submitBtn.disabled = false;
-                });
 
                 socket.emit('question', { query: question });
             });
