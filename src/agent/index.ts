@@ -1,67 +1,97 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { SqlDatabase } from "langchain/sql_db";
-import { PromptTemplate } from "@langchain/core/prompts";
-import { RunnableSequence } from "@langchain/core/runnables";
-import { StringOutputParser } from "@langchain/core/output_parsers";
+import { OpenAI } from 'openai';
 import prisma from '../db/index.js';
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
-// Function to initialize the database and create the chain
-const initializeAgent = async () => {
+// Initialize OpenAI client
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY || process.env.NEBIUS_API_KEY,
+    baseURL: process.env.OPENAI_BASE_URL || 'https://api.studio.nebius.com/v1/',
+});
+
+// Function to get database schema information
+const getCustomerDatabaseSchema = async () => {
     try {
-        // Use SqlDatabase with direct connection details
-        const db = await SqlDatabase.fromDataSourceParams({
-            appDataSource: prisma,
+        // Create schema description based on known schema
+        const schema = `
+            Table: customer
+            Columns: id (integer), name (string), email (string)
+
+            Table: address
+            Columns: id (integer), customer_id (integer), type (string), street (string), city (string), zip (string), country (string)
+
+            Table: orders
+            Columns: id (integer), customer_id (integer), order_date (date), total_amount (decimal)
+
+            Relationships:
+            - customer has many address (one-to-many relationship via customer_id)
+            - customer has many orders (one-to-many relationship via customer_id)
+        `;
+
+        return schema;
+    } catch (error) {
+        console.error('Error getting database schema:', error);
+        throw error;
+    }
+};
+
+// Function to execute SQL query using Prisma
+const executeSafeReadQuery = async (sqlQuery: string) => {
+    try {
+        // For safety, only allow SELECT queries
+        if (!sqlQuery.trim().toLowerCase().startsWith('select')) {
+            throw new Error('Only SELECT queries are allowed');
+        }
+
+        // Execute raw query using Prisma
+        const result = await prisma.$queryRawUnsafe(sqlQuery);
+        return result;
+    } catch (error) {
+        console.error('Error executing query:', error);
+        throw error;
+    }
+};
+
+// Main function to process natural language query
+const naturalLanguageToSqlQuery = async (query: string) => {
+    try {
+        // Get database schema
+        const schema = await getCustomerDatabaseSchema();
+
+        // Generate SQL query using OpenAI
+        const completion = await openai.chat.completions.create({
+            model: process.env.OPENAI_MODEL || 'meta-llama/Llama-3.3-70B-Instruct',
+            temperature: 0,
+            messages: [
+                {
+                    role: 'system',
+                    content: `You are an AI assistant that translates natural language questions into SQL queries based on the provided database schema. Only respond with the SQL query, nothing else.`
+                },
+                {
+                    role: 'user',
+                    content: `Database schema:\n${schema}\n\nQuestion: ${query}\n\nSQL Query:`
+                }
+            ]
         });
 
-        const model = new ChatOpenAI({ temperature: 0 });
+        // Extract SQL query from response
+        const sqlQuery = completion.choices[0].message.content?.trim() || '';
+        console.log('Generated SQL query:', sqlQuery);
 
-        // Get table information to include in the prompt
-        const tableInfo = await db.getTableInfo();
+        // Execute the query
+        const result = await executeSafeReadQuery(sqlQuery);
 
-        // Define the prompt template
-        const prompt = PromptTemplate.fromTemplate(`
-            You are an AI assistant that translates natural language questions into SQL queries based on the provided database schema.
-            The database schema is as follows:
-            {table_info}
-
-            Based on the schema, write a SQL query to answer the following question:
-            {query}
-
-            SQL Query:
-        `);
-
-        // Create the chain
-        const chain = RunnableSequence.from([
-            {
-                table_info: () => tableInfo,
-                query: (input: string) => input,
-            },
-            prompt,
-            model,
-            new StringOutputParser(),
-        ]);
-
-        return chain;
+        return {
+            sqlQuery,
+            result
+        };
     } catch (error) {
-        console.error("Error initializing agent:", error);
+        console.error('Error in naturalLanguageToSqlQuery:', error);
         throw error;
     }
 };
 
-
-const queryAgent = async (query: string) => {
-    const chain = await initializeAgent();
-    try {
-        const sqlQuery = await chain.invoke(query);
-        return sqlQuery;
-    } catch (error) {
-        console.error("Error running agent query:", error);
-        throw error;
-    }
-};
-
-export { initializeAgent, queryAgent };
+// Export the naturalLanguageToSqlQuery function
+export { naturalLanguageToSqlQuery };
