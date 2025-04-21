@@ -183,13 +183,6 @@ const streamingLangChainAgent = async (
             onQueryResult,
             onAnswer
         });
-    } catch (error) {
-        console.error('Error in streamingLangChainAgent:', error);
-        if (error instanceof Error) {
-            onThought(`Error: ${error.message}`);
-        } else {
-            onThought('An unknown error occurred');
-        }
     } finally {
         onComplete();
     }
