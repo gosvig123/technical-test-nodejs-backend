@@ -24,7 +24,7 @@ const model = new ChatOpenAI({
 export interface IAgentResponse {
     answer: string;
     sqlQuery?: string;
-    queryResult?: any;
+    queryResult?: Record<string, string>[];
     thoughts?: string[];
     error?: string | null;
 }
@@ -35,8 +35,9 @@ export interface IAgentResponse {
 export interface IAgentCallbacks {
     onThought?: (thought: string) => void;
     onSqlQuery?: (sqlQuery: string) => void;
-    onQueryResult?: (result: any) => void;
+    onQueryResult?: (result: Record<string, any>[]) => void; // Refined type for query results
     onAnswer?: (answer: string) => void;
+    onComplete?: () => void;
 }
 
 /**
