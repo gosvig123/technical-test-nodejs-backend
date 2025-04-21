@@ -7,8 +7,7 @@
   "scripts": {
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'node --loader ts-node/esm' src/index.ts",
     "start": "node dist/index.js",
-    "build": "tsc",
-    "check-deps": "depcheck"
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
