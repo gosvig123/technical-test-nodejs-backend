@@ -38,5 +38,4 @@ app.use(router);
 
 server.listen(port, () => {
     console.log(`Server is running on port ${port}`);
-    console.log(`Socket.io server is available at ws://localhost:${port}`);
 });

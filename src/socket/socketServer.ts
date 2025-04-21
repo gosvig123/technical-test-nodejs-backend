@@ -17,8 +17,6 @@ export const setupSocketServer = (io: Server): void => {
                 return;
             }
 
-            console.log(`Received question from ${socket.id}: ${data.query}`);
-
             try {
                 await streamingLangChainAgent(
                     data.query,
