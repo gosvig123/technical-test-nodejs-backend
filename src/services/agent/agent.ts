@@ -35,7 +35,7 @@ export interface IAgentResponse {
 export interface IAgentCallbacks {
     onThought?: (thought: string) => void;
     onSqlQuery?: (sqlQuery: string) => void;
-    onQueryResult?: (result: Record<string, any>[]) => void; // Refined type for query results
+    onQueryResult?: (result: Record<string, string>[]) => void; // Refined type for query results
     onAnswer?: (answer: string) => void;
     onComplete?: () => void;
 }
@@ -195,7 +195,7 @@ const streamingLangChainAgent = async (
     question: string,
     onThought: (thought: string) => void,
     onSqlQuery: (sqlQuery: string) => void,
-    onQueryResult: (result: any) => void,
+    onQueryResult: (result: Record<string, string>[]) => void,
     onAnswer: (answer: string) => void,
     onComplete: () => void
 ): Promise<void> => {

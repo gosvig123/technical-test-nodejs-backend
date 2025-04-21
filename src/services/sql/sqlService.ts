@@ -4,7 +4,7 @@ import { Prisma } from '../../../generated/prisma/index.js';
 /**
  * Interface for SQL query result
  */
-export interface ISqlQueryResult<T = any> {
+export interface ISqlQueryResult<T = Record<string, string>> {
   success: boolean;
   data?: T;
   error?: string;
@@ -49,7 +49,7 @@ export class SqlService {
    * @param sqlQuery The SQL query to execute
    * @returns The query result
    */
-  public static async executeSafeReadQuery<T = any>(sqlQuery: string): Promise<ISqlQueryResult<T>> {
+  public static async executeSafeReadQuery<T = Record<string, string>>(sqlQuery: string): Promise<ISqlQueryResult<T>> {
     try {
       // Add validation check
       const validation = this.validateSqlQuery(sqlQuery);
@@ -86,7 +86,7 @@ export class SqlService {
    * @param obj The object to stringify
    * @returns The stringified object
    */
-  public static safeStringify(obj: any): string {
+  public static safeStringify(obj: Record<string, string>): string {
     return JSON.stringify(obj, (_, value) =>
       typeof value === 'bigint' ? value.toString() : value
     );
