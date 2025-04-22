@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { runAgent } from '../services/agent/agent.js';
-import { safeStringify } from '../services/agent/sqlExecutor.js';
+import { safeStringify } from '../utils/stringUtils.js';
 import { ISocketQuestionData } from '../types/index.js';
 
 /**

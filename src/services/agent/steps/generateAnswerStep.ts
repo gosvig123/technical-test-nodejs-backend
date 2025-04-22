@@ -3,7 +3,7 @@
  */
 import { AgentState, AgentCallbacks, PipelineStep } from '../../../types/index.js';
 import { answerChain } from '../model.js';
-import { safeStringify } from '../sqlExecutor.js';
+import { safeStringify } from '../../../utils/stringUtils.js';
 
 export const generateAnswerStep: PipelineStep = {
     name: 'generateAnswer',
