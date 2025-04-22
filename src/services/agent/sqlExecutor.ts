@@ -1,21 +1,12 @@
 import prisma from '../../db/index.js';
-
-/**
- * Interface for SQL query result
- */
-export interface ISqlQueryResult<T> {
-    success: boolean;
-    data?: T;
-    error?: string;
-    query?: string;
-}
+import { ISqlQueryResult, ISqlValidationResult } from '../../types/index.js';
 
 /**
  * Validates a SQL query to ensure it's safe to execute
  * @param query The SQL query to validate
  * @returns Validation result with isValid flag and optional error message
  */
-export const validateSqlQuery = (query: string): { isValid: boolean; error?: string } => {
+export const validateSqlQuery = (query: string): ISqlValidationResult => {
     // Basic validation checks
     if (!query) {
         return { isValid: false, error: 'Query is empty' };
@@ -28,10 +19,10 @@ export const validateSqlQuery = (query: string): { isValid: boolean; error?: str
 
     // Check for dangerous keywords
     const dangerousKeywords = ['insert', 'update', 'delete', 'drop', 'truncate', 'alter'];
-    const hasDisallowedKeywords = dangerousKeywords.some(keyword => 
+    const hasDisallowedKeywords = dangerousKeywords.some(keyword =>
         query.toLowerCase().includes(keyword)
     );
-    
+
     if (hasDisallowedKeywords) {
         return { isValid: false, error: 'Query contains disallowed keywords' };
     }
@@ -58,7 +49,7 @@ export const executeSafeReadQuery = async <T = Record<string, string>>(sqlQuery:
 
         // Execute the query
         const result = await prisma.$queryRawUnsafe<T>(sqlQuery);
-        
+
         return {
             success: true,
             data: result,
@@ -67,7 +58,7 @@ export const executeSafeReadQuery = async <T = Record<string, string>>(sqlQuery:
     } catch (error) {
         console.error('Error executing query:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error executing query';
-        
+
         return {
             success: false,
             error: errorMessage,

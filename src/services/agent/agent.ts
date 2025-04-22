@@ -6,6 +6,15 @@ import { PromptTemplate } from '@langchain/core/prompts';
 import { ANALYZE_PROMPT_TEMPLATE, SQL_PROMPT_TEMPLATE, ANSWER_PROMPT_TEMPLATE } from './prompts.js';
 import { getDatabaseSchemaForPrompt } from './dbSchema.js';
 import { executeSafeReadQuery, safeStringify } from './sqlExecutor.js';
+import {
+    ThoughtCallback,
+    SqlQueryCallback,
+    QueryResultCallback,
+    AnswerCallback,
+    CompleteCallback,
+    IAgentQuestionInput,
+    IAgentChainResult
+} from '../../types/index.js';
 
 // Load environment variables
 dotenv.config();
@@ -62,14 +71,14 @@ const createChains = () => {
     // Create a combined chain for the entire process
     const agentChain = RunnableSequence.from([
         // First, format the input for the analyze chain
-        async (input: { question: string }) => {
+        async (input: IAgentQuestionInput) => {
             return {
                 schema,
                 question: input.question
             };
         },
         // Then run the analyze chain
-        async (input) => {
+        async (input: { schema: string, question: string }) => {
             const analysis = await analyzeChain.invoke(input);
             return {
                 ...input,
@@ -77,7 +86,7 @@ const createChains = () => {
             };
         },
         // Then check confidence and generate SQL if confidence is high enough
-        async (input) => {
+        async (input: { schema: string, question: string, analysis: string }) => {
             // Extract confidence score
             const confidenceMatch = input.analysis.match(/\[CONFIDENCE: (0\.\d+)\]/);
             const confidence = confidenceMatch ? parseFloat(confidenceMatch[1]) : 0;
@@ -121,11 +130,11 @@ const createChains = () => {
  */
 export const runAgent = async (
     question: string,
-    onThought: (thought: string) => void,
-    onSqlQuery: (sqlQuery: string) => void,
-    onQueryResult: (result: Record<string, string>[]) => void,
-    onAnswer: (answer: string) => void,
-    onComplete: () => void
+    onThought: ThoughtCallback,
+    onSqlQuery: SqlQueryCallback,
+    onQueryResult: QueryResultCallback,
+    onAnswer: AnswerCallback,
+    onComplete: CompleteCallback
 ): Promise<void> => {
     try {
         // Create chains and get schema
@@ -135,7 +144,7 @@ export const runAgent = async (
         onThought("Analyzing your question...");
 
         // Run the agent chain
-        const result = await agentChain.invoke({ question });
+        const result = await agentChain.invoke({ question }) as IAgentChainResult;
 
         // Send the analysis to the client
         onThought(result.analysis);
@@ -174,6 +183,7 @@ export const runAgent = async (
 
             // Step 4: Generate answer
             onThought("Generating answer...");
+            // Generate the answer using the answer chain
             const answer = await answerChain.invoke({
                 question,
                 sqlQuery,

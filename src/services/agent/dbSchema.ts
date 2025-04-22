@@ -16,13 +16,13 @@ export const getDatabaseSchemaForPrompt = (): string => {
     // Add tables and columns
     for (const modelName of modelNames) {
         schema += `Table: ${modelName}\n`;
-        
+
         // Get column information dynamically from Prisma's DMMF
         const dmmf = Prisma.dmmf;
-        const model = dmmf.datamodel.models.find(m => 
+        const model = dmmf.datamodel.models.find(m =>
             m.name.toLowerCase() === modelName.toLowerCase()
         );
-        
+
         if (model) {
             // Map Prisma types to SQL types
             const typeMap: Record<string, string> = {
@@ -33,7 +33,7 @@ export const getDatabaseSchemaForPrompt = (): string => {
                 'Float': 'decimal',
                 'Decimal': 'decimal'
             };
-            
+
             // Extract column information
             const columnStrings = model.fields
                 .filter(field => field.kind === 'scalar') // Only include scalar fields, not relations
@@ -41,28 +41,28 @@ export const getDatabaseSchemaForPrompt = (): string => {
                     const type = typeMap[field.type] || 'string';
                     return `${field.name} (${type})`;
                 });
-            
+
             schema += `Columns: ${columnStrings.join(', ')}\n\n`;
-        } 
+        }
     }
 
     // Add relationships
     schema += 'Relationships:\n';
-    
+
     // Extract relationships dynamically from DMMF
     const relationships = [];
     const dmmf = Prisma.dmmf;
-    
+
     for (const model of dmmf.datamodel.models) {
         const modelName = model.name.toLowerCase();
-        
+
         // Find relation fields
         const relationFields = model.fields.filter(field => field.kind === 'object');
-        
+
         for (const field of relationFields) {
             const targetModel = field.type.toLowerCase();
             const relationType = field.isList ? 'one-to-many' : 'many-to-one';
-            
+
             relationships.push({
                 source: modelName,
                 target: targetModel,
@@ -71,12 +71,12 @@ export const getDatabaseSchemaForPrompt = (): string => {
             });
         }
     }
-    
+
     // Add relationship strings
     for (const rel of relationships) {
         const typeStr = rel.type === 'one-to-many' ? 'has many' : 'belongs to';
         schema += `- ${rel.source} ${typeStr} ${rel.target} (${rel.type} relationship via ${rel.field})\n`;
     }
-    
+
     return schema;
 };
