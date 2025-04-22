@@ -9,6 +9,7 @@ import {
     AgentCallbacks,
     PipelineStep
 } from '../../types/index.js';
+// AgentStep is used in the step files
 import { analyzeStep } from './steps/analyzeStep.js';
 import { generateSqlStep } from './steps/generateSqlStep.js';
 import { executeSqlStep } from './steps/executeSqlStep.js';

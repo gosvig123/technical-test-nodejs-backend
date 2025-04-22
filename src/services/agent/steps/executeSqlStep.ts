@@ -1,10 +1,11 @@
 
 import { AgentState, AgentCallbacks, PipelineStep } from '../../../types/index.js';
 import prisma from '../../../connector/index.js';
+import { AgentStep, StepMessage } from '../../../constants/agentSteps.js';
 
 export const executeSqlStep: PipelineStep = {
-    name: 'executeSql',
-    message: 'Executing SQL query...',
+    name: AgentStep.EXECUTE_SQL,
+    message: StepMessage[AgentStep.EXECUTE_SQL],
     execute: async (state: AgentState) => {
         if (!state.sqlQuery) {
             throw new Error('No SQL query to execute');

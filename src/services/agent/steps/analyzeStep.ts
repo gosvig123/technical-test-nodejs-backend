@@ -2,10 +2,11 @@
 import { AgentState, AgentCallbacks, PipelineStep } from '../../../types/index.js';
 import { analyzeChain, dbSchema } from '../utils/modelConfig.js';
 import { config } from '../../../config/index.js';
+import { AgentStep, StepMessage } from '../../../constants/agentSteps.js';
 
 export const analyzeStep: PipelineStep = {
-    name: 'analyze',
-    message: 'Analyzing your question...',
+    name: AgentStep.ANALYZE,
+    message: StepMessage[AgentStep.ANALYZE],
     execute: async (state: AgentState) => {
         const analysis = await analyzeChain.invoke({
             schema: dbSchema,

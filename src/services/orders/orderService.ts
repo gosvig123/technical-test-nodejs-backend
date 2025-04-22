@@ -1,9 +1,9 @@
-import { orders } from '../../../generated/prisma/index.js';
+import { order } from '../../../generated/prisma/index.js';
 import prisma from '../../connector/index.js';
 
-export const getOrdersByCustomerId = async (customerId: number): Promise<orders[]> => {
+export const getOrdersByCustomerId = async (customerId: number): Promise<order[]> => {
   try {
-    const orders = await prisma.orders.findMany({
+    const orders = await prisma.order.findMany({
       where: { customer_id: customerId },
     });
     return orders;
@@ -13,9 +13,9 @@ export const getOrdersByCustomerId = async (customerId: number): Promise<orders[
   }
 };
 
-export const getOrderById = async (id: number): Promise<orders | null> => {
+export const getOrderById = async (id: number): Promise<order | null> => {
   try {
-    const order = await prisma.orders.findUnique({
+    const order = await prisma.order.findUnique({
       where: { id },
     });
     return order;
@@ -31,9 +31,9 @@ type OrderCreateInput = {
   total_amount?: number; // Use number for Decimal in Prisma client
 };
 
-export const createOrder = async (data: OrderCreateInput): Promise<orders> => {
+export const createOrder = async (data: OrderCreateInput): Promise<order> => {
   try {
-    const newOrder = await prisma.orders.create({
+    const newOrder = await prisma.order.create({
       data: {
         customer_id: data.customer_id,
         order_date: data.order_date,
@@ -52,9 +52,9 @@ type OrderUpdateInput = {
   total_amount?: number; // Use number for Decimal in Prisma client
 };
 
-export const updateOrder = async (id: number, data: OrderUpdateInput): Promise<orders> => {
+export const updateOrder = async (id: number, data: OrderUpdateInput): Promise<order> => {
   try {
-    const updatedOrder = await prisma.orders.update({
+    const updatedOrder = await prisma.order.update({
       where: { id },
       data: {
         order_date: data.order_date,
@@ -68,9 +68,9 @@ export const updateOrder = async (id: number, data: OrderUpdateInput): Promise<o
   }
 };
 
-export const deleteOrder = async (id: number): Promise<orders> => {
+export const deleteOrder = async (id: number): Promise<order> => {
   try {
-    const deletedOrder = await prisma.orders.delete({
+    const deletedOrder = await prisma.order.delete({
       where: { id },
     });
     return deletedOrder;

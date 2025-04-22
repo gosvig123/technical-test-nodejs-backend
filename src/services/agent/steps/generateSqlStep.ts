@@ -1,10 +1,11 @@
 
 import { AgentState, AgentCallbacks, PipelineStep } from '../../../types/index.js';
 import { sqlChain, dbSchema } from '../utils/modelConfig.js';
+import { AgentStep, StepMessage } from '../../../constants/agentSteps.js';
 
 export const generateSqlStep: PipelineStep = {
-    name: 'generateSql',
-    message: 'Generating SQL query...',
+    name: AgentStep.GENERATE_SQL,
+    message: StepMessage[AgentStep.GENERATE_SQL],
     execute: async (state: AgentState) => {
         const sqlQuery = await sqlChain.invoke({
             schema: dbSchema,

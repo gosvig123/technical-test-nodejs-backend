@@ -3,6 +3,7 @@ import { runAgent } from '../services/agent/agent.js';
 import { stringifyWithBigInt } from '../utils/stringUtils.js';
 import { SocketQuestionData } from '../types/index.js';
 import { config } from '../config/index.js';
+import { AgentStep } from '../constants/agentSteps.js';
 
 
 export const setupSocketServer = (io: Server): void => {
@@ -22,9 +23,9 @@ export const setupSocketServer = (io: Server): void => {
         console.log(`Client connected: ${socket.id}`);
 
         // Handle question event using the LangChain-powered agent
-        socket.on('question', async (data: SocketQuestionData) => {
+        socket.on(AgentStep.QUESTION, async (data: SocketQuestionData) => {
             if (!data || !data.query) {
-                socket.emit('error', { message: 'Query is required' });
+                socket.emit(AgentStep.ERROR, { message: 'Query is required' });
                 return;
             }
 
@@ -32,17 +33,17 @@ export const setupSocketServer = (io: Server): void => {
                 await runAgent(
                     data.query,
 
-                    (thought) => socket.emit('thought', { thought }),
-                    (sqlQuery) => socket.emit('sqlQuery', { sqlQuery }),
-                    (result) => socket.emit('queryResult', {
+                    (thought) => socket.emit(AgentStep.THOUGHT, { thought }),
+                    (sqlQuery) => socket.emit(AgentStep.SQL_QUERY, { sqlQuery }),
+                    (result) => socket.emit(AgentStep.QUERY_RESULT, {
                         result: JSON.parse(stringifyWithBigInt(result))
                     }),
-                    (answer) => socket.emit('answerChunk', { chunk: answer }),
-                    () => socket.emit('answerComplete')
+                    (answer) => socket.emit(AgentStep.ANSWER_CHUNK, { chunk: answer }),
+                    () => socket.emit(AgentStep.ANSWER_COMPLETE)
                 );
             } catch (error) {
                 console.error('Error processing question:', error);
-                socket.emit('error', { message: 'Error processing your question' });
+                socket.emit(AgentStep.ERROR, { message: 'Error processing your question' });
             }
         });
 
