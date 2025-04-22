@@ -18,20 +18,10 @@ import { executeSqlStep } from './steps/executeSqlStep.js';
 import { generateAnswerStep } from './steps/generateAnswerStep.js';
 
 /**
- * Create the agent pipeline steps
- */
-const createPipeline = (): PipelineStep[] => [
-    analyzeStep,
-    generateSqlStep,
-    executeSqlStep,
-    generateAnswerStep
-];
-
-/**
  * Process a question through the pipeline
  *
  * This function implements the core agent logic required by the project:
- * 1. Uses LangChain for LLM integration (via the chains defined above)
+ * 1. Uses LangChain for LLM integration
  * 2. Processes natural language questions about customer data
  * 3. Generates and executes SQL queries against the database
  * 4. Streams results in real-time through callbacks
@@ -59,7 +49,14 @@ export const runAgent = async (
         onAnswer,
         onComplete
     };
-    const pipeline = createPipeline();
+
+    // Define the pipeline steps directly
+    const pipeline: PipelineStep[] = [
+        analyzeStep,
+        generateSqlStep,
+        executeSqlStep,
+        generateAnswerStep
+    ];
 
     try {
         // Initialize state with the question

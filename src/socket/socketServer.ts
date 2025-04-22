@@ -1,14 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { runAgent } from '../services/agent/agent.js';
 import { safeStringify } from '../services/agent/sqlExecutor.js';
-import {
-    ISocketQuestionData,
-    ISocketThoughtData,
-    ISocketSqlQueryData,
-    ISocketQueryResultData,
-    ISocketAnswerChunkData,
-    ISocketErrorData
-} from '../types/index.js';
+import { ISocketQuestionData } from '../types/index.js';
 
 /**
  * Sets up the Socket.io server with event handlers
@@ -21,24 +14,25 @@ export const setupSocketServer = (io: Server): void => {
         // Handle question event using the LangChain-powered agent
         socket.on('question', async (data: ISocketQuestionData) => {
             if (!data || !data.query) {
-                socket.emit('error', { message: 'Query is required' } as ISocketErrorData);
+                socket.emit('error', { message: 'Query is required' });
                 return;
             }
 
             try {
                 await runAgent(
                     data.query,
-                    (thought: string) => socket.emit('thought', { thought } as ISocketThoughtData),
-                    (sqlQuery: string) => socket.emit('sqlQuery', { sqlQuery } as ISocketSqlQueryData),
-                    (result: Record<string, string>[]) => socket.emit('queryResult', {
+                    // Simplified callbacks without unnecessary type assertions
+                    (thought) => socket.emit('thought', { thought }),
+                    (sqlQuery) => socket.emit('sqlQuery', { sqlQuery }),
+                    (result) => socket.emit('queryResult', {
                         result: JSON.parse(safeStringify(result))
-                    } as ISocketQueryResultData),
-                    (answer: string) => socket.emit('answerChunk', { chunk: answer } as ISocketAnswerChunkData),
+                    }),
+                    (answer) => socket.emit('answerChunk', { chunk: answer }),
                     () => socket.emit('answerComplete')
                 );
             } catch (error) {
                 console.error('Error processing question:', error);
-                socket.emit('error', { message: 'Error processing your question' } as ISocketErrorData);
+                socket.emit('error', { message: 'Error processing your question' });
             }
         });
 
