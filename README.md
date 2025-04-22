@@ -24,14 +24,24 @@ cp .env.example .env
 ```
 > **Note**: Just changing the name will work with the existing docker database. However, make sure to update the API key and the Nebius API key from the example to real values.
 
+### 3️⃣ Database Setup
 ```bash
-# Setup database
-docker-compose up -d
-yarn prisma generate
-yarn prisma migrate dev --name init
+# Launch PostgreSQL with Docker Compose
+# This will automatically:
+# - Start the database container
+# - Create the schema
+# - Insert sample data
+docker compose up -d
+
+# Generate Prisma client only (no migrations needed as schema is created by init_db.sql)
 ```
 
-### 3️⃣ Run Application
+```bash
+yarn prisma generate
+yarn prisma db push (if the schema does not match what is in the init_db.sql)
+```
+
+### 4️⃣ Run Application
 ```bash
 yarn build
 yarn start
