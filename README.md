@@ -1,56 +1,69 @@
-# Technical Test: Node.js Backend
+# 🚀 Technical Test: Node.js Backend
 
-## Prerequisites
-- Node.js 20.9.0
-- Yarn (or npm)
-- Docker & Docker Compose
-- Postman (or similar API client)
+## 📋 Prerequisites
+- ✨ Node.js 20.9.0
+- 📦 Yarn (or npm)
+- 🐳 Docker & Docker Compose
+- 🔧 Postman (or similar API client)
 
-## Quick Setup
+## ⚡ Quick Setup
 
-1. **Clone & Install**
-   clone the repo
-   run 'yarn' to install dependencies
+### 1️⃣ Clone & Install
+```bash
+# Clone the repo
+git clone <repository-url>
 
-2. **Environment & Prisma Setup**
-   # Configure environment
-   cp .env.example .env
-   
-   Just changing the name will work with the existing docker database, however do change this if that is not the intention, and make sure to update the 
-   API key, and the nebius api key from the example to really values
-   
-   # Setup database
-   docker-compose up -d
-   yarn prisma generate
-   yarn prisma migrate dev --name init
+# Install dependencies
+yarn
+```
 
-3. **Database Setup**
-   # Start PostgreSQL container
-   docker-compose up -d
-   
-   # Verify container is running (should see "customer-db")
-   docker ps
+### 2️⃣ Environment & Prisma Setup
+```bash
+# Configure environment
+cp .env.example .env
+```
+> **Note**: Just changing the name will work with the existing docker database. However, make sure to update the API key and the Nebius API key from the example to real values.
 
+```bash
+# Setup database
+docker-compose up -d
+yarn prisma generate
+yarn prisma migrate dev --name init
+```
 
-4. **Run Application**
-   yarn build
-   yarn start
-   → Application runs at http://localhost:8000
+### 3️⃣ Database Setup
+```bash
+# Start PostgreSQL container
+docker-compose up -d
 
-## Testing
+# Verify container is running (should see "customer-db")
+docker ps
+```
 
-### API Testing (Postman)
+### 4️⃣ Run Application
+```bash
+yarn build
+yarn start
+```
+> 🌐 Application runs at http://localhost:8000
+
+## 🧪 Testing
+
+### 🔌 API Testing (Postman)
 1. Import `postmanCollection.json` from the project root
 2. Set environment variables:
    - `baseURL`: http://localhost:8000
    - `apiKey`: Your API key
 
-### Agent Testing
+### 🤖 Agent Testing
 1. Navigate to http://localhost:8000 in browser
 2. Ask questions about the database
 
-### Interface Panels
-- **Agent Thoughts**: Real-time thinking process
-- **SQL Panel**: Database queries and results
-- **Final Answer**: Synthesized response
+### 📊 Interface Panels
+| Panel | Description |
+|-------|-------------|
+| 💭 **Agent Thoughts** | Real-time thinking process |
+| 📝 **SQL Panel** | Database queries and results |
+| ✨ **Final Answer** | Synthesized response |
+
 
