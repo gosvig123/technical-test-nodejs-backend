@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import { streamingLangChainAgent } from '../services/agent/agent.js';
+import { runAgent } from '../services/agent/agent.js';
 import { safeStringify } from '../services/agent/sqlExecutor.js';
 import {
     ISocketQuestionData,
@@ -26,14 +26,14 @@ export const setupSocketServer = (io: Server): void => {
             }
 
             try {
-                await streamingLangChainAgent(
+                await runAgent(
                     data.query,
-                    (thought) => socket.emit('thought', { thought } as ISocketThoughtData),
-                    (sqlQuery) => socket.emit('sqlQuery', { sqlQuery } as ISocketSqlQueryData),
-                    (result) => socket.emit('queryResult', {
+                    (thought: string) => socket.emit('thought', { thought } as ISocketThoughtData),
+                    (sqlQuery: string) => socket.emit('sqlQuery', { sqlQuery } as ISocketSqlQueryData),
+                    (result: Record<string, string>[]) => socket.emit('queryResult', {
                         result: JSON.parse(safeStringify(result))
                     } as ISocketQueryResultData),
-                    (answer) => socket.emit('answerChunk', { chunk: answer } as ISocketAnswerChunkData),
+                    (answer: string) => socket.emit('answerChunk', { chunk: answer } as ISocketAnswerChunkData),
                     () => socket.emit('answerComplete')
                 );
             } catch (error) {

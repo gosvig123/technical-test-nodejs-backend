@@ -1,7 +1,6 @@
 import dotenv from 'dotenv';
 import { ChatOpenAI } from '@langchain/openai';
 import { StringOutputParser } from '@langchain/core/output_parsers';
-import { RunnableSequence } from '@langchain/core/runnables';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { ANALYZE_PROMPT_TEMPLATE, SQL_PROMPT_TEMPLATE, ANSWER_PROMPT_TEMPLATE } from './prompts.js';
 import { getDatabaseSchemaForPrompt } from './dbSchema.js';
@@ -12,8 +11,9 @@ import {
     QueryResultCallback,
     AnswerCallback,
     CompleteCallback,
-    IAgentQuestionInput,
-    IAgentChainResult
+    AgentState,
+    AgentCallbacks,
+    PipelineStep
 } from '../../types/index.js';
 
 // Load environment variables
@@ -29,98 +29,151 @@ const model = new ChatOpenAI({
     }
 });
 
+// Get database schema for prompts once
+const schema = getDatabaseSchemaForPrompt();
 
+// Create prompt templates once
+const analyzePrompt = PromptTemplate.fromTemplate(ANALYZE_PROMPT_TEMPLATE);
+const sqlPrompt = PromptTemplate.fromTemplate(SQL_PROMPT_TEMPLATE);
+const answerPrompt = PromptTemplate.fromTemplate(ANSWER_PROMPT_TEMPLATE);
 
-
+// Create the chains once at module level
+const analyzeChain = analyzePrompt.pipe(model).pipe(new StringOutputParser());
+const sqlChain = sqlPrompt.pipe(model).pipe(new StringOutputParser());
+const answerChain = answerPrompt.pipe(model).pipe(new StringOutputParser());
 
 /**
- * Creates the LangChain chains for the agent
- * Uses LangChain's RunnableSequence to create composable chains for analyzing questions,
- * generating SQL queries, and formulating answers.
- * @returns The LangChain chains
+ * Helper function to create a pipeline step
  */
-const createChains = () => {
-    const schema = getDatabaseSchemaForPrompt();
+const createStep = (config: {
+    name: string;
+    message: string;
+    execute: (state: AgentState) => Promise<AgentState>;
+    onSuccess: (state: AgentState, callbacks: AgentCallbacks) => boolean;
+}): PipelineStep => config;
 
-    // Create prompt templates
-    const analyzePrompt = PromptTemplate.fromTemplate(ANALYZE_PROMPT_TEMPLATE);
-    const sqlPrompt = PromptTemplate.fromTemplate(SQL_PROMPT_TEMPLATE);
-    const answerPrompt = PromptTemplate.fromTemplate(ANSWER_PROMPT_TEMPLATE);
-
-    // Create a chain for analyzing the question
-    const analyzeChain = RunnableSequence.from([
-        analyzePrompt,
-        model,
-        new StringOutputParser()
-    ]);
-
-    // Create a chain for generating SQL queries
-    const sqlChain = RunnableSequence.from([
-        sqlPrompt,
-        model,
-        new StringOutputParser()
-    ]);
-
-    // Create a chain for generating the final answer
-    const answerChain = RunnableSequence.from([
-        answerPrompt,
-        model,
-        new StringOutputParser()
-    ]);
-
-    // Create a combined chain for the entire process
-    const agentChain = RunnableSequence.from([
-        // First, format the input for the analyze chain
-        async (input: IAgentQuestionInput) => {
-            return {
+/**
+ * Create the agent pipeline steps
+ */
+const createPipeline = (): PipelineStep[] => [
+    // Step 1: Analyze the question
+    createStep({
+        name: 'analyze',
+        message: 'Analyzing your question...',
+        execute: async (state) => {
+            const analysis = await analyzeChain.invoke({
                 schema,
-                question: input.question
-            };
-        },
-        // Then run the analyze chain
-        async (input: { schema: string, question: string }) => {
-            const analysis = await analyzeChain.invoke(input);
-            return {
-                ...input,
-                analysis
-            };
-        },
-        // Then check confidence and generate SQL if confidence is high enough
-        async (input: { schema: string, question: string, analysis: string }) => {
+                question: state.question
+            });
+
             // Extract confidence score
-            const confidenceMatch = input.analysis.match(/\[CONFIDENCE: (0\.\d+)\]/);
+            const confidenceMatch = analysis.match(/\[CONFIDENCE: (0\.\d+)\]/);
             const confidence = confidenceMatch ? parseFloat(confidenceMatch[1]) : 0;
 
-            if (confidence >= 0.4) {
-                // Generate SQL query
-                const sqlQuery = await sqlChain.invoke(input);
-
-                // Sanitize SQL query
-                const sanitizedQuery = sqlQuery.trim()
-                    .replace(/;+$/, ''); // Remove trailing semicolons
-
-                return {
-                    ...input,
-                    confidence,
-                    sqlQuery: sanitizedQuery
-                };
-            } else {
-                return {
-                    ...input,
-                    confidence,
-                    sqlQuery: null
-                };
+            return {
+                ...state,
+                analysis,
+                confidence,
+                shouldContinue: confidence >= 0.4
+            };
+        },
+        onSuccess: (state, callbacks) => {
+            if (state.analysis) {
+                callbacks.onThought(state.analysis);
             }
+            if (!state.shouldContinue) {
+                callbacks.onAnswer("I need a specific question about customer data to help you. " +
+                                 "Please ask about customers, their orders, or addresses.");
+            }
+            return state.shouldContinue || false;
         }
-    ]);
+    }),
 
-    return { analyzeChain, sqlChain, answerChain, agentChain, schema };
-};
+    // Step 2: Generate SQL query
+    createStep({
+        name: 'generateSql',
+        message: 'Generating SQL query...',
+        execute: async (state) => {
+            const sqlQuery = await sqlChain.invoke({
+                schema,
+                question: state.question,
+                analysis: state.analysis
+            });
 
+            // Sanitize SQL query
+            const sanitizedQuery = sqlQuery.trim().replace(/;+$/, '');
 
+            return { ...state, sqlQuery: sanitizedQuery };
+        },
+        onSuccess: (state, callbacks) => {
+            if (state.sqlQuery) {
+                callbacks.onSqlQuery(state.sqlQuery);
+            }
+            return true;
+        }
+    }),
+
+    // Step 3: Execute SQL query
+    createStep({
+        name: 'executeSql',
+        message: 'Executing SQL query...',
+        execute: async (state) => {
+            if (!state.sqlQuery) {
+                throw new Error('No SQL query to execute');
+            }
+
+            const result = await executeSafeReadQuery<Record<string, string>[]>(state.sqlQuery);
+
+            if (!result.success) {
+                throw new Error(result.error);
+            }
+
+            return { ...state, queryResult: result.data as Record<string, string>[] };
+        },
+        onSuccess: (state, callbacks) => {
+            if (state.queryResult) {
+                callbacks.onQueryResult(state.queryResult);
+            }
+            return true;
+        }
+    }),
+
+    // Step 4: Generate answer
+    createStep({
+        name: 'generateAnswer',
+        message: 'Generating answer...',
+        execute: async (state) => {
+            if (!state.sqlQuery || !state.queryResult) {
+                throw new Error('Missing SQL query or query results');
+            }
+
+            const answer = await answerChain.invoke({
+                question: state.question,
+                sqlQuery: state.sqlQuery,
+                queryResult: safeStringify(state.queryResult)
+            });
+
+            return { ...state, answer };
+        },
+        onSuccess: (state, callbacks) => {
+            if (state.answer) {
+                callbacks.onAnswer(state.answer);
+            }
+            return true;
+        }
+    })
+];
 
 /**
- * Run the LLM-powered agent with streaming response
+ * Process a question through the pipeline
+ *
+ * This function implements the core agent logic required by the project:
+ * 1. Uses LangChain for LLM integration (via the chains defined above)
+ * 2. Processes natural language questions about customer data
+ * 3. Generates and executes SQL queries against the database
+ * 4. Streams results in real-time through callbacks
+ * 5. Handles errors gracefully at each step
+ *
  * @param question The natural language question
  * @param onThought Callback for thoughts/reasoning
  * @param onSqlQuery Callback for the generated SQL query
@@ -136,74 +189,47 @@ export const runAgent = async (
     onAnswer: AnswerCallback,
     onComplete: CompleteCallback
 ): Promise<void> => {
+    const callbacks: AgentCallbacks = {
+        onThought,
+        onSqlQuery,
+        onQueryResult,
+        onAnswer,
+        onComplete
+    };
+    const pipeline = createPipeline();
+
     try {
-        // Create chains and get schema
-        const { answerChain, agentChain } = createChains();
+        // Initialize state with the question
+        let state: AgentState = { question };
 
-        // Step 1: Run the agent chain to analyze and generate SQL
-        onThought("Analyzing your question...");
+        // Process each step in the pipeline
+        for (const step of pipeline) {
+            try {
+                // Announce the current step
+                callbacks.onThought(step.message);
 
-        // Run the agent chain
-        const result = await agentChain.invoke({ question }) as IAgentChainResult;
+                // Execute the step
+                state = await step.execute(state);
 
-        // Send the analysis to the client
-        onThought(result.analysis);
+                // Process the result
+                const shouldContinue = step.onSuccess(state, callbacks);
+                if (!shouldContinue) break;
 
-        // If confidence is too low, return early
-        if (result.confidence < 0.4) {
-            const response = "I need a specific question about customer data to help you. " +
-                           "Please ask about customers, their orders, or addresses.";
-
-            onAnswer(response);
-            return;
-        }
-
-        // Get the SQL query from the result
-        const sqlQuery = result.sqlQuery;
-        if (!sqlQuery) {
-            throw new Error("Failed to generate SQL query");
-        }
-
-        // Send the SQL query to the client
-        onThought("Generating SQL query...");
-        onSqlQuery(sqlQuery);
-
-        // Step 3: Execute SQL query
-        onThought("Executing SQL query...");
-
-        try {
-            // Execute the query safely
-            const queryResult = await executeSafeReadQuery<Record<string, string>[]>(sqlQuery);
-
-            if (!queryResult.success) {
-                throw new Error(queryResult.error);
+            } catch (error) {
+                const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+                callbacks.onThought(`Error in ${step.name}: ${errorMsg}`);
+                callbacks.onAnswer(`I encountered an error: ${errorMsg}`);
+                return;
             }
-
-            onQueryResult(queryResult.data as Record<string, string>[]);
-
-            // Step 4: Generate answer
-            onThought("Generating answer...");
-            // Generate the answer using the answer chain
-            const answer = await answerChain.invoke({
-                question,
-                sqlQuery,
-                queryResult: safeStringify(queryResult.data as Record<string, string>[])
-            });
-
-            onAnswer(answer);
-        } catch (err) {
-            const error = err instanceof Error ? err.message : 'Unknown error executing query';
-            onThought(`Error executing query: ${error}`);
-            onAnswer(`I encountered an error: ${error}`);
         }
     } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-        onThought(`Error: ${errorMsg}`);
-        onAnswer('I encountered an error while processing your question.');
+        callbacks.onThought(`Error: ${errorMsg}`);
+        callbacks.onAnswer('I encountered an error while processing your question.');
     } finally {
-        onComplete();
+        callbacks.onComplete();
     }
 };
 
-// For backward compatibility
+// Export runAgent as streamingLangChainAgent for backward compatibility
 export const streamingLangChainAgent = runAgent;

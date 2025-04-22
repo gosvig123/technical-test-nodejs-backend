@@ -52,47 +52,46 @@ export type AnswerCallback = (answer: string) => void;
 export type CompleteCallback = () => void;
 
 /**
- * Agent input for question analysis
+ * Interface for agent state
  */
-export interface IAgentQuestionInput {
+export interface AgentState {
     question: string;
+    analysis?: string;
+    confidence?: number;
+    shouldContinue?: boolean;
+    sqlQuery?: string;
+    queryResult?: Record<string, string>[];
+    answer?: string;
 }
 
 /**
- * Agent input with schema information
+ * Interface for agent callbacks
+ *
+ * This interface defines the callbacks used to stream the agent's progress
+ * to the client. Each callback is called at a specific point in the pipeline:
+ * - onThought: When the agent is thinking/analyzing
+ * - onSqlQuery: When the agent generates an SQL query
+ * - onQueryResult: When the agent gets results from the database
+ * - onAnswer: When the agent generates the final answer
+ * - onComplete: When the agent completes the process
  */
-export interface IAgentSchemaInput extends IAgentQuestionInput {
-    schema: string;
+export interface AgentCallbacks {
+    onThought: ThoughtCallback;
+    onSqlQuery: SqlQueryCallback;
+    onQueryResult: QueryResultCallback;
+    onAnswer: AnswerCallback;
+    onComplete: CompleteCallback;
 }
 
 /**
- * Agent input with analysis
+ * Interface for a pipeline step
  */
-export interface IAgentAnalysisInput extends IAgentSchemaInput {
-    analysis: string;
+export interface PipelineStep {
+    name: string;
+    message: string;
+    execute: (state: AgentState) => Promise<AgentState>;
+    onSuccess: (state: AgentState, callbacks: AgentCallbacks) => boolean;
 }
-
-/**
- * Agent input with SQL query
- */
-export interface IAgentSqlInput extends IAgentAnalysisInput {
-    confidence: number;
-    sqlQuery: string | null;
-}
-
-/**
- * Agent input for answer generation
- */
-export interface IAgentAnswerInput {
-    question: string;
-    sqlQuery: string;
-    queryResult: string;
-}
-
-/**
- * Agent chain result
- */
-export interface IAgentChainResult extends IAgentSqlInput {}
 
 // ===== Socket Types =====
 
@@ -121,7 +120,7 @@ export interface ISocketSqlQueryData {
  * Socket query result event data
  */
 export interface ISocketQueryResultData {
-    result: Record<string, any>[];
+    result: Record<string, string>[];
 }
 
 /**
@@ -164,3 +163,4 @@ export type CustomerWithRelations = Prisma.customerGetPayload<{
         orders: true;
     }
 }>;
+
