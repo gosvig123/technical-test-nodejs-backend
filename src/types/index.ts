@@ -79,11 +79,6 @@ export interface SocketErrorData {
     message: string;
 }
 
-// Database Types
-export type Customer = Prisma.customerGetPayload<{}>;
-export type Address = Prisma.addressGetPayload<{}>;
-export type Order = Prisma.orderGetPayload<{}>;
-
 export type CustomerWithRelations = Prisma.customerGetPayload<{
     include: {
         address: true;
