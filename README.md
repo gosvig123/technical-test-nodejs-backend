@@ -11,7 +11,7 @@
 ### 1️⃣ Clone & Install
 ```bash
 # Clone the repo
-git clone <repository-url>
+git clone https://github.com/gosvig123/technical-test-nodejs-backend
 
 # Install dependencies
 yarn
@@ -31,16 +31,7 @@ yarn prisma generate
 yarn prisma migrate dev --name init
 ```
 
-### 3️⃣ Database Setup
-```bash
-# Start PostgreSQL container
-docker-compose up -d
-
-# Verify container is running (should see "customer-db")
-docker ps
-```
-
-### 4️⃣ Run Application
+### 3️⃣ Run Application
 ```bash
 yarn build
 yarn start
