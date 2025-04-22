@@ -1,5 +1,5 @@
 import { orders } from '../../../generated/prisma/index.js';
-import prisma from '../../db/index.js';
+import prisma from '../../connector/index.js';
 
 export const getOrdersByCustomerId = async (customerId: number): Promise<orders[]> => {
   try {

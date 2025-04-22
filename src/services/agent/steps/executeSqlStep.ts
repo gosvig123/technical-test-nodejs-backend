@@ -3,7 +3,7 @@
  * Uses Prisma for SQL execution with minimal validation
  */
 import { AgentState, AgentCallbacks, PipelineStep } from '../../../types/index.js';
-import prisma from '../../../db/index.js';
+import prisma from '../../../connector/index.js';
 
 export const executeSqlStep: PipelineStep = {
     name: 'executeSql',
