@@ -2,8 +2,8 @@
  * Step 4: Generate answer
  */
 import { AgentState, AgentCallbacks, PipelineStep } from '../../../types/index.js';
-import { answerChain } from '../utils/model.js';
-import { safeStringify } from '../../../utils/stringUtils.js';
+import { answerChain } from '../utils/modelConfig.js';
+import { stringifyWithBigInt } from '../../../utils/stringUtils.js';
 
 export const generateAnswerStep: PipelineStep = {
     name: 'generateAnswer',
@@ -16,7 +16,7 @@ export const generateAnswerStep: PipelineStep = {
         const answer = await answerChain.invoke({
             question: state.question,
             sqlQuery: state.sqlQuery,
-            queryResult: safeStringify(state.queryResult)
+            queryResult: stringifyWithBigInt(state.queryResult)
         });
 
         return { ...state, answer };

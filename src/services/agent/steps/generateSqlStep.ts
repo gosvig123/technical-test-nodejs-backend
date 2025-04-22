@@ -2,14 +2,14 @@
  * Step 2: Generate SQL query
  */
 import { AgentState, AgentCallbacks, PipelineStep } from '../../../types/index.js';
-import { sqlChain, schema } from '../utils/model.js';
+import { sqlChain, dbSchema } from '../utils/modelConfig.js';
 
 export const generateSqlStep: PipelineStep = {
     name: 'generateSql',
     message: 'Generating SQL query...',
     execute: async (state: AgentState) => {
         const sqlQuery = await sqlChain.invoke({
-            schema,
+            schema: dbSchema,
             question: state.question,
             analysis: state.analysis
         });

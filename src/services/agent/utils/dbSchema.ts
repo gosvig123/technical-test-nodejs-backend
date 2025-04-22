@@ -5,7 +5,7 @@ import { Prisma } from '../../../../generated/prisma/index.js';
  * This method dynamically extracts schema information from Prisma's metadata
  * @returns A string representation of the database schema
  */
-export const getDatabaseSchemaForPrompt = (): string => {
+export const formatSchema = (): string => {
     // Get DMMF data once
     const dmmf = Prisma.dmmf;
     let schema = '';

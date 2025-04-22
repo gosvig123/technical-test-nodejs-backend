@@ -2,7 +2,7 @@
  * Step 1: Analyze the question
  */
 import { AgentState, AgentCallbacks, PipelineStep } from '../../../types/index.js';
-import { analyzeChain, schema } from '../utils/model.js';
+import { analyzeChain, dbSchema } from '../utils/modelConfig.js';
 import { config } from '../../../config/index.js';
 
 export const analyzeStep: PipelineStep = {
@@ -10,7 +10,7 @@ export const analyzeStep: PipelineStep = {
     message: 'Analyzing your question...',
     execute: async (state: AgentState) => {
         const analysis = await analyzeChain.invoke({
-            schema,
+            schema: dbSchema,
             question: state.question
         });
 

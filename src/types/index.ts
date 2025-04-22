@@ -7,9 +7,9 @@ import { Prisma } from '../../generated/prisma/index.js';
 // ===== SQL Executor Types =====
 
 /**
- * Interface for SQL query result
+ * SQL query result
  */
-export interface ISqlQueryResult<T> {
+export interface SqlQueryResult<T> {
     success: boolean;
     data?: T;
     error?: string;
@@ -17,9 +17,9 @@ export interface ISqlQueryResult<T> {
 }
 
 /**
- * Interface for SQL query validation result
+ * SQL query validation result
  */
-export interface ISqlValidationResult {
+export interface SqlValidationResult {
     isValid: boolean;
     error?: string;
 }
@@ -98,42 +98,42 @@ export interface PipelineStep {
 /**
  * Socket question event data
  */
-export interface ISocketQuestionData {
+export interface SocketQuestionData {
     query: string;
 }
 
 /**
  * Socket thought event data
  */
-export interface ISocketThoughtData {
+export interface SocketThoughtData {
     thought: string;
 }
 
 /**
  * Socket SQL query event data
  */
-export interface ISocketSqlQueryData {
+export interface SocketSqlQueryData {
     sqlQuery: string;
 }
 
 /**
  * Socket query result event data
  */
-export interface ISocketQueryResultData {
+export interface SocketQueryResultData {
     result: Record<string, string>[];
 }
 
 /**
  * Socket answer chunk event data
  */
-export interface ISocketAnswerChunkData {
+export interface SocketAnswerChunkData {
     chunk: string;
 }
 
 /**
  * Socket error event data
  */
-export interface ISocketErrorData {
+export interface SocketErrorData {
     message: string;
 }
 
@@ -152,7 +152,7 @@ export type Address = Prisma.addressGetPayload<{}>;
 /**
  * Order model type from Prisma
  */
-export type Order = Prisma.ordersGetPayload<{}>;
+export type Order = Prisma.orderGetPayload<{}>;
 
 /**
  * Customer with related data

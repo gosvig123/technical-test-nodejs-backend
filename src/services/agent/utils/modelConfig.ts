@@ -5,7 +5,7 @@ import { ChatOpenAI } from '@langchain/openai';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { ANALYZE_PROMPT_TEMPLATE, SQL_PROMPT_TEMPLATE, ANSWER_PROMPT_TEMPLATE } from './prompts.js';
-import { getDatabaseSchemaForPrompt } from './dbSchema.js';
+import { formatSchema } from './dbSchema.js';
 import { config } from '../../../config/index.js';
 
 // Initialize LangChain model
@@ -19,7 +19,7 @@ export const model = new ChatOpenAI({
 });
 
 // Get database schema for prompts once
-export const schema = getDatabaseSchemaForPrompt();
+export const dbSchema = formatSchema();
 
 // Create prompt templates
 export const analyzePrompt = PromptTemplate.fromTemplate(ANALYZE_PROMPT_TEMPLATE);

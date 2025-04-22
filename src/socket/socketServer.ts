@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { runAgent } from '../services/agent/agent.js';
-import { safeStringify } from '../utils/stringUtils.js';
-import { ISocketQuestionData } from '../types/index.js';
+import { stringifyWithBigInt } from '../utils/stringUtils.js';
+import { SocketQuestionData } from '../types/index.js';
 import { config } from '../config/index.js';
 
 /**
@@ -24,7 +24,7 @@ export const setupSocketServer = (io: Server): void => {
         console.log(`Client connected: ${socket.id}`);
 
         // Handle question event using the LangChain-powered agent
-        socket.on('question', async (data: ISocketQuestionData) => {
+        socket.on('question', async (data: SocketQuestionData) => {
             if (!data || !data.query) {
                 socket.emit('error', { message: 'Query is required' });
                 return;
@@ -37,7 +37,7 @@ export const setupSocketServer = (io: Server): void => {
                     (thought) => socket.emit('thought', { thought }),
                     (sqlQuery) => socket.emit('sqlQuery', { sqlQuery }),
                     (result) => socket.emit('queryResult', {
-                        result: JSON.parse(safeStringify(result))
+                        result: JSON.parse(stringifyWithBigInt(result))
                     }),
                     (answer) => socket.emit('answerChunk', { chunk: answer }),
                     () => socket.emit('answerComplete')

@@ -24,10 +24,10 @@ model customer {
   name    String    @db.VarChar(100)
   email   String    @db.VarChar(100)
   address address[]
-  orders  orders[]
+  orders  order[]
 }
 
-model orders {
+model order {
   id           Int       @id @default(autoincrement())
   customer_id  Int
   order_date   DateTime? @db.Date
