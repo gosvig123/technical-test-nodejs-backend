@@ -93,6 +93,3 @@ export const runAgent = async (
         callbacks.onComplete();
     }
 };
-
-// Export runAgent as streamingLangChainAgent for backward compatibility
-export const streamingLangChainAgent = runAgent;
