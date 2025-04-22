@@ -6,12 +6,9 @@ import {
   updateAddress,
   deleteAddress,
 } from '../../services/addresses/addressService.js';
-import authenticateApiKey from '../../middleware/auth.js';
 
 const router = Router();
 
-// Apply authentication middleware to all routes in this router
-router.use(authenticateApiKey);
 
 // GET all addresses for a specific customer
 router.get('/customer/:customerId', async (req: Request, res: Response) => {

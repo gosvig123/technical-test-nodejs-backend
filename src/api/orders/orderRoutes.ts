@@ -6,12 +6,8 @@ import {
   updateOrder,
   deleteOrder,
 } from '../../services/orders/orderService.js';
-import authenticateApiKey from '../../middleware/auth.js';
 
 const router = Router();
-
-// Apply authentication middleware to all routes in this router
-router.use(authenticateApiKey);
 
 // GET all orders for a specific customer
 router.get('/customer/:customerId', async (req: Request, res: Response) => {

@@ -1,14 +1,8 @@
 import { getCustomers, getCustomerById, createCustomer, updateCustomer, deleteCustomer } from '../../services/customers/customerService.js';
-import { Router, Request, Response, NextFunction } from 'express';
-import authenticateApiKey from '../../middleware/auth.js';
+import { Router, Request, Response } from 'express';
 
 // Initialize router without options
 const router = Router();
-
-// Apply authentication middleware to all routes
-router.use((req: Request, res: Response, next: NextFunction) => {
-  authenticateApiKey(req, res, next);
-});
 
 // GET all customers
 router.get('/', async (_req: Request, res: Response) => {
