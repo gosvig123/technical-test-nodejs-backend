@@ -1,19 +1,9 @@
-import { PromptTemplate } from '@langchain/core/prompts';
-
 /**
- * Interface for prompt templates
+ * This file contains the prompt templates used by the LangChain agent
  */
-export interface IPromptTemplates {
-  analyzePrompt: PromptTemplate;
-  sqlPrompt: PromptTemplate;
-  answerPrompt: PromptTemplate;
-}
 
-/**
- * Class for managing prompt templates
- */
-export class PromptService {
-  private static readonly ANALYZE_PROMPT_TEMPLATE = `You are an AI assistant that helps analyze database questions.
+// Prompt for analyzing the question
+export const ANALYZE_PROMPT_TEMPLATE = `You are an AI assistant that helps analyze database questions.
 Given a question about customer data and the database schema, analyze if the question is related to the database and provide a confidence score.
 
 IMPORTANT:
@@ -31,7 +21,8 @@ Question: {question}
 
 Provide your confidence score and analysis:`;
 
-  private static readonly SQL_PROMPT_TEMPLATE = `You are an AI assistant that translates natural language questions into SQL queries.
+// Prompt for generating SQL queries
+export const SQL_PROMPT_TEMPLATE = `You are an AI assistant that translates natural language questions into SQL queries.
 Given the database schema and a question, generate a SQL query that will answer the question.
 
 IMPORTANT RULES:
@@ -54,7 +45,8 @@ Previous analysis: {analysis}
 
 SQL Query (write only the raw query):`;
 
-  private static readonly ANSWER_PROMPT_TEMPLATE = `You are an AI assistant that explains database query results in natural language.
+// Prompt for generating the final answer
+export const ANSWER_PROMPT_TEMPLATE = `You are an AI assistant that explains database query results in natural language.
 Given a question, SQL query, and query result, provide a clear answer to the original question.
 
 Question: {question}
@@ -64,18 +56,3 @@ SQL Query: {sqlQuery}
 Query Result: {queryResult}
 
 Please explain these results in a clear, natural way:`;
-
-  /**
-   * Creates prompt templates using the provided database schema
-   * @param schema The database schema to use in the prompts
-   * @returns The prompt templates
-   */
-  public static createPromptTemplates(): IPromptTemplates {
-    // Use the schema string directly in the prompt templates
-    return {
-      analyzePrompt: PromptTemplate.fromTemplate(this.ANALYZE_PROMPT_TEMPLATE),
-      sqlPrompt: PromptTemplate.fromTemplate(this.SQL_PROMPT_TEMPLATE),
-      answerPrompt: PromptTemplate.fromTemplate(this.ANSWER_PROMPT_TEMPLATE)
-    };
-  }
-}
