@@ -1,17 +1,15 @@
 
 import express from 'express';
-import dotenv from 'dotenv';
 import router from './router.js';
 import http from 'http';
 import { Server } from 'socket.io';
 import { setupSocketServer } from './socket/socketServer.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-dotenv.config();
+import { config } from './config/index.js';
 
 const app = express();
-const port = process.env.PORT || 8000;
+const port = config.server.port;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

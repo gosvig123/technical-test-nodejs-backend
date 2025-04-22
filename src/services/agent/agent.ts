@@ -1,10 +1,7 @@
-import dotenv from 'dotenv';
-import { ChatOpenAI } from '@langchain/openai';
-import { StringOutputParser } from '@langchain/core/output_parsers';
-import { PromptTemplate } from '@langchain/core/prompts';
-import { ANALYZE_PROMPT_TEMPLATE, SQL_PROMPT_TEMPLATE, ANSWER_PROMPT_TEMPLATE } from './prompts.js';
-import { getDatabaseSchemaForPrompt } from './dbSchema.js';
-import { executeSafeReadQuery, safeStringify } from './sqlExecutor.js';
+/**
+ * Main agent implementation file
+ * This file orchestrates the pipeline steps and handles the agent execution
+ */
 import {
     ThoughtCallback,
     SqlQueryCallback,
@@ -15,153 +12,19 @@ import {
     AgentCallbacks,
     PipelineStep
 } from '../../types/index.js';
-
-// Load environment variables
-dotenv.config();
-
-// Initialize LangChain model
-const model = new ChatOpenAI({
-    apiKey: process.env.NEBIUS_API_KEY,
-    modelName: "meta-llama/Llama-3.3-70B-Instruct",
-    temperature: 0,
-    configuration: {
-        baseURL: 'https://api.studio.nebius.com/v1/'
-    }
-});
-
-// Get database schema for prompts once
-const schema = getDatabaseSchemaForPrompt();
-
-// Create prompt templates once
-const analyzePrompt = PromptTemplate.fromTemplate(ANALYZE_PROMPT_TEMPLATE);
-const sqlPrompt = PromptTemplate.fromTemplate(SQL_PROMPT_TEMPLATE);
-const answerPrompt = PromptTemplate.fromTemplate(ANSWER_PROMPT_TEMPLATE);
-
-// Create the chains once at module level
-const analyzeChain = analyzePrompt.pipe(model).pipe(new StringOutputParser());
-const sqlChain = sqlPrompt.pipe(model).pipe(new StringOutputParser());
-const answerChain = answerPrompt.pipe(model).pipe(new StringOutputParser());
-
-/**
- * Helper function to create a pipeline step
- */
-const createStep = (config: {
-    name: string;
-    message: string;
-    execute: (state: AgentState) => Promise<AgentState>;
-    onSuccess: (state: AgentState, callbacks: AgentCallbacks) => boolean;
-}): PipelineStep => config;
+import { analyzeStep } from './steps/analyzeStep.js';
+import { generateSqlStep } from './steps/generateSqlStep.js';
+import { executeSqlStep } from './steps/executeSqlStep.js';
+import { generateAnswerStep } from './steps/generateAnswerStep.js';
 
 /**
  * Create the agent pipeline steps
  */
 const createPipeline = (): PipelineStep[] => [
-    // Step 1: Analyze the question
-    createStep({
-        name: 'analyze',
-        message: 'Analyzing your question...',
-        execute: async (state) => {
-            const analysis = await analyzeChain.invoke({
-                schema,
-                question: state.question
-            });
-
-            // Extract confidence score
-            const confidenceMatch = analysis.match(/\[CONFIDENCE: (0\.\d+)\]/);
-            const confidence = confidenceMatch ? parseFloat(confidenceMatch[1]) : 0;
-
-            return {
-                ...state,
-                analysis,
-                confidence,
-                shouldContinue: confidence >= 0.4
-            };
-        },
-        onSuccess: (state, callbacks) => {
-            if (state.analysis) {
-                callbacks.onThought(state.analysis);
-            }
-            if (!state.shouldContinue) {
-                callbacks.onAnswer("I need a specific question about customer data to help you. " +
-                                 "Please ask about customers, their orders, or addresses.");
-            }
-            return state.shouldContinue || false;
-        }
-    }),
-
-    // Step 2: Generate SQL query
-    createStep({
-        name: 'generateSql',
-        message: 'Generating SQL query...',
-        execute: async (state) => {
-            const sqlQuery = await sqlChain.invoke({
-                schema,
-                question: state.question,
-                analysis: state.analysis
-            });
-
-            // Sanitize SQL query
-            const sanitizedQuery = sqlQuery.trim().replace(/;+$/, '');
-
-            return { ...state, sqlQuery: sanitizedQuery };
-        },
-        onSuccess: (state, callbacks) => {
-            if (state.sqlQuery) {
-                callbacks.onSqlQuery(state.sqlQuery);
-            }
-            return true;
-        }
-    }),
-
-    // Step 3: Execute SQL query
-    createStep({
-        name: 'executeSql',
-        message: 'Executing SQL query...',
-        execute: async (state) => {
-            if (!state.sqlQuery) {
-                throw new Error('No SQL query to execute');
-            }
-
-            const result = await executeSafeReadQuery<Record<string, string>[]>(state.sqlQuery);
-
-            if (!result.success) {
-                throw new Error(result.error);
-            }
-
-            return { ...state, queryResult: result.data as Record<string, string>[] };
-        },
-        onSuccess: (state, callbacks) => {
-            if (state.queryResult) {
-                callbacks.onQueryResult(state.queryResult);
-            }
-            return true;
-        }
-    }),
-
-    // Step 4: Generate answer
-    createStep({
-        name: 'generateAnswer',
-        message: 'Generating answer...',
-        execute: async (state) => {
-            if (!state.sqlQuery || !state.queryResult) {
-                throw new Error('Missing SQL query or query results');
-            }
-
-            const answer = await answerChain.invoke({
-                question: state.question,
-                sqlQuery: state.sqlQuery,
-                queryResult: safeStringify(state.queryResult)
-            });
-
-            return { ...state, answer };
-        },
-        onSuccess: (state, callbacks) => {
-            if (state.answer) {
-                callbacks.onAnswer(state.answer);
-            }
-            return true;
-        }
-    })
+    analyzeStep,
+    generateSqlStep,
+    executeSqlStep,
+    generateAnswerStep
 ];
 
 /**
