@@ -16,7 +16,7 @@ model address {
   city        String?  @db.VarChar(50)
   zip         String?  @db.VarChar(20)
   country     String?  @db.VarChar(50)
-  customer    customer @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customer    customer @relation(fields: [customer_id], references: [id], onDelete: Cascade)
 }
 
 model customer {
@@ -32,5 +32,5 @@ model orders {
   customer_id  Int
   order_date   DateTime? @db.Date
   total_amount Decimal?  @db.Decimal(10, 2)
-  customer     customer  @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customer     customer  @relation(fields: [customer_id], references: [id], onDelete: Cascade)
 }
