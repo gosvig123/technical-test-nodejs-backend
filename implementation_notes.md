@@ -65,7 +65,6 @@ This document outlines the implementation approach for the LLM-Powered Customer 
 ### 4. Developer Experience
 
 - **Comprehensive Testing**: Add unit, integration, and end-to-end tests with high coverage.
-- **API Documentation**: Generate OpenAPI/Swagger documentation for all endpoints.
 - **Monitoring & Logging**: Implement structured logging and performance monitoring.
 - **CI/CD Pipeline**: Set up automated testing and deployment workflows.
 
