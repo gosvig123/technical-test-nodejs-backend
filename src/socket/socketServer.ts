@@ -2,11 +2,23 @@ import { Server, Socket } from 'socket.io';
 import { runAgent } from '../services/agent/agent.js';
 import { safeStringify } from '../utils/stringUtils.js';
 import { ISocketQuestionData } from '../types/index.js';
+import { config } from '../config/index.js';
 
 /**
  * Sets up the Socket.io server with event handlers
  */
 export const setupSocketServer = (io: Server): void => {
+    // Middleware for authentication
+    io.use((socket, next) => {
+        const apiKey = socket.handshake.auth.apiKey || socket.handshake.query.apiKey;
+
+        if (!apiKey || apiKey !== config.api.key) {
+            return next(new Error('Authentication error: Invalid API key'));
+        }
+
+        next();
+    });
+
     // Connection event handler
     io.on('connection', (socket: Socket) => {
         console.log(`Client connected: ${socket.id}`);

@@ -115,7 +115,7 @@
 <body>
     <div class="container">
         <h1>Customer Database Query Interface</h1>
-        
+
         <div class="input-section">
             <div class="input-group">
                 <input type="text" id="questionInput" placeholder="Ask a question about customer data...">
@@ -145,7 +145,15 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const socket = io('ws://localhost:8000');
+            // Prompt for API key (in a real app, this would be stored securely)
+            const apiKey = prompt('Please enter your API key:', 'default_api_key_for_development');
+
+            // Connect to socket with authentication
+            const socket = io('ws://localhost:8000', {
+                auth: {
+                    apiKey: apiKey
+                }
+            });
             const questionInput = document.getElementById('questionInput');
             const submitBtn = document.getElementById('submitBtn');
             const errorMessage = document.getElementById('errorMessage');

@@ -38,7 +38,7 @@ docker compose up -d
 
 ```bash
 yarn prisma generate
-yarn prisma db push 
+yarn prisma db push
 ```
 
 ### 4️⃣ Run Application
@@ -58,7 +58,8 @@ yarn start
 
 ### 🤖 Agent Testing
 1. Navigate to http://localhost:8000 in browser
-2. Ask questions about the database
+2. You will be prompted to enter your api key, that will be the value from your `.env` file
+3. Paste it and ask questions about the database, while seeing the process of the agent on screen.
 
 ### 📊 Interface Panels
 | Panel | Description |
