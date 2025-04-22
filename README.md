@@ -38,7 +38,7 @@ docker compose up -d
 
 ```bash
 yarn prisma generate
-yarn prisma db push (if the schema does not match what is in the init_db.sql)
+yarn prisma db push 
 ```
 
 ### 4️⃣ Run Application
