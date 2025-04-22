@@ -1,5 +1,6 @@
 import { Server, Socket } from 'socket.io';
-import { streamingLangChainAgent, safeStringify } from '../services/agent/agent.js';
+import { streamingLangChainAgent } from '../services/agent/agent.js';
+import { safeStringify } from '../services/agent/sqlExecutor.js';
 
 /**
  * Sets up the Socket.io server with event handlers
