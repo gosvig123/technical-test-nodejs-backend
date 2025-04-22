@@ -8,10 +8,13 @@
 
 ## ⚡ Quick Setup
 
-### 1️⃣ Clone & Install
+### 1️⃣ Extract & Install
 ```bash
-# Clone the repo
-git clone https://github.com/gosvig123/technical-test-nodejs-backend
+# Extract the zip file
+unzip technical-test-nodejs-backend.zip
+
+# Navigate to the project directory
+cd technical-test-nodejs-backend
 
 # Install dependencies
 yarn
@@ -22,7 +25,7 @@ yarn
 # Configure environment
 cp .env.example .env
 ```
-> **Note**: Just changing the name will work with the existing docker database. However, make sure to update the API key and the Nebius API key from the example to real values.
+> **Note**: Just changing the name will work with the existing docker database. However, make sure to update the `VERY_SECRET_API_KEY` (for API authentication) and the `NEBIUS_API_KEY` (for LLM integration) in the .env file with your actual API keys.
 
 ### 3️⃣ Database Setup
 ```bash
