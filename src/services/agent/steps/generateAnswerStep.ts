@@ -1,6 +1,4 @@
-/**
- * Step 4: Generate answer
- */
+
 import { AgentState, AgentCallbacks, PipelineStep } from '../../../types/index.js';
 import { answerChain } from '../utils/modelConfig.js';
 import { stringifyWithBigInt } from '../../../utils/stringUtils.js';

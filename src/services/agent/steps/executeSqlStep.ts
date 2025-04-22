@@ -1,7 +1,4 @@
-/**
- * Step 3: Execute SQL query
- * Uses Prisma for SQL execution with minimal validation
- */
+
 import { AgentState, AgentCallbacks, PipelineStep } from '../../../types/index.js';
 import prisma from '../../../connector/index.js';
 
@@ -17,7 +14,6 @@ export const executeSqlStep: PipelineStep = {
 
         try {
             // Execute the query directly with Prisma
-            // The result will be cast to the expected type in the AgentState
             const result = await prisma.$queryRawUnsafe(query) as Record<string, string>[];
 
             // Return the result with the correct type

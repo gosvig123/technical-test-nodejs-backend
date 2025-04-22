@@ -1,7 +1,4 @@
-/**
- * Main agent implementation file
- * This file orchestrates the pipeline steps and handles the agent execution
- */
+
 import {
     ThoughtCallback,
     SqlQueryCallback,
@@ -18,21 +15,8 @@ import { executeSqlStep } from './steps/executeSqlStep.js';
 import { generateAnswerStep } from './steps/generateAnswerStep.js';
 
 /**
- * Process a question through the pipeline
- *
- * This function implements the core agent logic required by the project:
- * 1. Uses LangChain for LLM integration
- * 2. Processes natural language questions about customer data
- * 3. Generates and executes SQL queries against the database
- * 4. Streams results in real-time through callbacks
- * 5. Handles errors gracefully at each step
- *
- * @param question The natural language question
- * @param onThought Callback for thoughts/reasoning
- * @param onSqlQuery Callback for the generated SQL query
- * @param onQueryResult Callback for the query result
- * @param onAnswer Callback for the final answer
- * @param onComplete Callback when the streaming is complete
+ * Process a question through the pipeline using LangChain for LLM integration
+ * Generates SQL queries from natural language and streams results in real-time
  */
 export const runAgent = async (
     question: string,
@@ -50,7 +34,7 @@ export const runAgent = async (
         onComplete
     };
 
-    // Define the pipeline steps directly
+
     const pipeline: PipelineStep[] = [
         analyzeStep,
         generateSqlStep,
@@ -59,19 +43,19 @@ export const runAgent = async (
     ];
 
     try {
-        // Initialize state with the question
+
         let state: AgentState = { question };
 
-        // Process each step in the pipeline
+
         for (const step of pipeline) {
             try {
-                // Announce the current step
+
                 callbacks.onThought(step.message);
 
-                // Execute the step
+
                 state = await step.execute(state);
 
-                // Process the result
+
                 const shouldContinue = step.onSuccess(state, callbacks);
                 if (!shouldContinue) break;
 

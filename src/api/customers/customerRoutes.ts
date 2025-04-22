@@ -1,7 +1,7 @@
 import { getCustomers, getCustomerById, createCustomer, updateCustomer, deleteCustomer } from '../../services/customers/customerService.js';
 import { Router, Request, Response } from 'express';
 
-// Initialize router without options
+
 const router = Router();
 
 // GET all customers
@@ -79,7 +79,7 @@ router.post('/', async (req: Request, res: Response) => {
 router.put('/:id', async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
-    // normally we would have some middleware to check who is trying to update what
+
     const { name, email } = req.body;
 
     if (isNaN(id)) {

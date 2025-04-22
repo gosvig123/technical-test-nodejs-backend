@@ -1,6 +1,4 @@
-/**
- * Step 2: Generate SQL query
- */
+
 import { AgentState, AgentCallbacks, PipelineStep } from '../../../types/index.js';
 import { sqlChain, dbSchema } from '../utils/modelConfig.js';
 

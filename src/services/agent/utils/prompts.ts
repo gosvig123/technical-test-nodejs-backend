@@ -1,7 +1,3 @@
-/**
- * This file contains the prompt templates used by the LangChain agent
- */
-
 // Prompt for analyzing the question
 export const ANALYZE_PROMPT_TEMPLATE = `You are an AI assistant that helps analyze database questions.
 Given a question about customer data and the database schema, analyze if the question is related to the database and provide a confidence score.

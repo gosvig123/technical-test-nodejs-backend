@@ -1,6 +1,4 @@
-/**
- * LLM model configuration and chain setup
- */
+
 import { ChatOpenAI } from '@langchain/openai';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { PromptTemplate } from '@langchain/core/prompts';

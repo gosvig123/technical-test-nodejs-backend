@@ -4,9 +4,7 @@ import { stringifyWithBigInt } from '../utils/stringUtils.js';
 import { SocketQuestionData } from '../types/index.js';
 import { config } from '../config/index.js';
 
-/**
- * Sets up the Socket.io server with event handlers
- */
+
 export const setupSocketServer = (io: Server): void => {
     // Middleware for authentication
     io.use((socket, next) => {
@@ -33,7 +31,7 @@ export const setupSocketServer = (io: Server): void => {
             try {
                 await runAgent(
                     data.query,
-                    // Simplified callbacks without unnecessary type assertions
+
                     (thought) => socket.emit('thought', { thought }),
                     (sqlQuery) => socket.emit('sqlQuery', { sqlQuery }),
                     (result) => socket.emit('queryResult', {
