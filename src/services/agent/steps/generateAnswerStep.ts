@@ -2,7 +2,7 @@
  * Step 4: Generate answer
  */
 import { AgentState, AgentCallbacks, PipelineStep } from '../../../types/index.js';
-import { answerChain } from '../model.js';
+import { answerChain } from '../utils/model.js';
 import { safeStringify } from '../../../utils/stringUtils.js';
 
 export const generateAnswerStep: PipelineStep = {

@@ -2,7 +2,7 @@
  * Step 1: Analyze the question
  */
 import { AgentState, AgentCallbacks, PipelineStep } from '../../../types/index.js';
-import { analyzeChain, schema } from '../model.js';
+import { analyzeChain, schema } from '../utils/model.js';
 import { config } from '../../../config/index.js';
 
 export const analyzeStep: PipelineStep = {

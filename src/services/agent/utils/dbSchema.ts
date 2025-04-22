@@ -1,4 +1,4 @@
-import { Prisma } from '../../../generated/prisma/index.js';
+import { Prisma } from '../../../../generated/prisma/index.js';
 
 /**
  * Get a formatted database schema string for use in prompts

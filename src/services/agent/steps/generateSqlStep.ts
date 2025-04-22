@@ -2,7 +2,7 @@
  * Step 2: Generate SQL query
  */
 import { AgentState, AgentCallbacks, PipelineStep } from '../../../types/index.js';
-import { sqlChain, schema } from '../model.js';
+import { sqlChain, schema } from '../utils/model.js';
 
 export const generateSqlStep: PipelineStep = {
     name: 'generateSql',
